@@ -1,0 +1,74 @@
+#!/bin/sh
+
+################################################################################
+#                                                                              #
+# sorted-human-du                                                              #
+#                                                                              #
+################################################################################
+# A script wrapper for du(1), which provides for human-readable file sizes     #
+# with sorting. This script requires GNU coreutils du (or another du with -h)  #
+# for human-readable sizes, but only requires POSIX-compatible commands for    #
+# processing.                                                                  #
+################################################################################
+# Copyright 2018 Sridhar K.N. Ayengar                                          #
+#                                                                              #
+# Permission is hereby granted, free of charge, to any person obtaining a copy #
+# of this software and associated documentation files (the "Software"), to     #
+# deal in the Software without restriction, including without limitation the   #
+# rights to use, copy, modify, merge, publish, distribute, sublicense, and/or  #
+# sell copies of the Software, and to permit persons to whom the Software is   #
+# furnished to do so, subject to the following conditions:                     #
+#                                                                              #
+# The above copyright notice and this permission notice shall be included in   #
+# all copies or substantial portions of the Software.                          #
+#                                                                              #
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR   #
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,     #
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE  #
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER       #
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING      #
+# FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS #
+# IN THE SOFTWARE.                                                             #
+################################################################################
+
+
+# Configure some executable locations.
+basename='/usr/bin/basename'
+cat='/bin/cat'
+du='/usr/bin/du'
+grep='/bin/grep'
+rm='/bin/rm'
+sed='/usr/bin/sed'
+sort='/bin/sort'
+
+# Make sure our environment is sane.  The presence of "[" is assumed.
+if [ -x $basename -a -x $cat -a -x $du -a -x $grep -a -x $rm -a -x $sed -a -x $sort ] ; then
+
+	# Create two temp files, so we only have to run du once.  du is expensive.
+	tempfile="/tmp/$($basename $0)-$$-1"
+	tempfile2="/tmp/$($basename $0)-$$-2"
+
+	# Run du, then check for errors.
+	$du -h $@ &> $tempfile
+	du_exit_code=$?
+	if [ $du_exit_code -ne 0 -o $1 = '--help' ] ; then
+		$sed -e "s~^$($basename $du)~$($basename $0)~g" -e "s~$du~$0~g" < $tempfile
+		exit $du_exit_code
+	fi
+
+	# Add the human-readable suffixes to the final file, in order.
+	$grep '^[0-9\.]*	' $tempfile | $sort -n > $tempfile2	# B
+	$grep '^[0-9\.]*K' $tempfile | $sort -n >> $tempfile2		# kB
+	$grep '^[0-9\.]*M' $tempfile | $sort -n >> $tempfile2		# MB
+	$grep '^[0-9\.]*G' $tempfile | $sort -n >> $tempfile2		# GB
+	$grep '^[0-9\.]*T' $tempfile | $sort -n >> $tempfile2		# TB
+	$grep '^[0-9\.]*P' $tempfile | $sort -n >> $tempfile2		# PB
+	$grep '^[0-9\.]*E' $tempfile | $sort -n >> $tempfile2		# EB
+
+	# Display the final output, then clean up the temp files.
+	$cat $tempfile2
+	$rm -f $tempfile $tempfile2
+else
+	echo "Environment is not sane." 2>&1
+	exit -1
+fi
