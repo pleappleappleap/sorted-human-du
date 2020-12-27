@@ -49,7 +49,7 @@ if [ -x $basename -a -x $cat -a -x $du -a -x $grep -a -x $rm -a -x $sed -a -x $s
 	tempfile2="/tmp/$($basename $0)-$$-2"
 
 	# Run du, then check for errors.
-	$du -h $@ &> $tempfile
+	$du -h $@ > $tempfile 2&>1
 	du_exit_code=$?
 	if [ $du_exit_code -ne 0 -o $1 = '--help' ] ; then
 		$sed -e "s~^$($basename $du)~$($basename $0)~g" -e "s~$du~$0~g" < $tempfile
