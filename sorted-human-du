@@ -10,7 +10,7 @@
 # for human-readable sizes, but only requires POSIX-compatible commands for    #
 # processing.                                                                  #
 ################################################################################
-# Copyright 2018 Sridhar K.N. Ayengar                                          #
+# Copyright 2020 Sridhar K.N. Ayengar                                          #
 #                                                                              #
 # Permission is hereby granted, free of charge, to any person obtaining a copy #
 # of this software and associated documentation files (the "Software"), to     #
@@ -64,6 +64,8 @@ if [ -x $basename -a -x $cat -a -x $du -a -x $grep -a -x $rm -a -x $sed -a -x $s
 	$grep '^[0-9\.]*T' $tempfile | $sort -n >> $tempfile2		# TB
 	$grep '^[0-9\.]*P' $tempfile | $sort -n >> $tempfile2		# PB
 	$grep '^[0-9\.]*E' $tempfile | $sort -n >> $tempfile2		# EB
+	$grep '^[0-9\.]*Z' $tempfile | $sort -n >> $tempfile2		# ZB
+	$grep '^[0-9\.]*Y' $tempfile | $sort -n >> $tempfile2		# YB
 
 	# Display the final output, then clean up the temp files.
 	$cat $tempfile2
